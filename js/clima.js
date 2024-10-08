@@ -1,50 +1,75 @@
-// 1. Obtener referencia a elementos del DOM (tabla de clima, historial de consultas, botón de vaciar historial)
+// Referencias a elementos del DOM (tabla de clima, historial de consultas, botón de vaciar historial)
+const weatherTable = document.getElementById('weatherTable').getElementsByTagName('tbody')[0];
+const historyList = document.getElementById('historyList');
+const clearHistoryBtn = document.getElementById('clearHistoryBtn');
 
-// 2. Definir función para obtener parámetros GET de la URL (ciudad seleccionada)
+// Función para obtener parámetros GET de la URL (ciudad seleccionada)
 function obtenerParametroGET(nombreParametro) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(nombreParametro);
+}
+// Función para obtener información de clima de una ciudad desde localStorage
+function obtenerInfoClima(ciudad) {
+    const ciudades = JSON.parse(localStorage.getItem('ciudades')) || [];
+    return ciudades.find(c => c.nombre === ciudad);
 }
 
-// 3. Función para obtener información de clima de una ciudad desde localStorage
-function obtenerInfoClima(ciudad) {
-    // Obtener los datos del clima almacenados en localStorage
-    // Buscar la ciudad en los datos obtenidos
-    if (ciudadEncontrada) {
-        // Mostrar la información del clima en la tabla
-        // Agregar la ciudad al historial en localStorage
+// Función para mostrar dinámicamente el clima de la ciudad seleccionada en la tabla
+function mostrarClimaEnTabla(ciudad) {
+    const infoClima = obtenerInfoClima(ciudad);
+
+    if (infoClima) {
+        const row = weatherTable.insertRow();
+        row.insertCell(0).textContent = infoClima.nombre;
+        row.insertCell(1).textContent = infoClima.temperatura;
+        row.insertCell(2).textContent = infoClima.condicion;
     } else {
-        console.error(`No se encontró información para la ciudad ${ciudad}`);
-        // Manejar el caso donde no se encuentra la ciudad en los datos
+        console.error('No se encontró información para esta ciudad.');
     }
 }
 
-// 4. Función para mostrar dinámicamente el clima de la ciudad seleccionada en la tabla
-function mostrarClimaEnTabla(ciudad) {
-}
-
-// 5. Función para agregar una ciudad al historial en localStorage
+// Función para agregar una ciudad al historial en localStorage
 function agregarCiudadAHistorial(ciudad) {
-    // Evitar duplicados en el historial
-    // Actualizar la lista en el DOM
+    let historial = JSON.parse(localStorage.getItem('historialConsultas')) || [];
+    
+    if (!historial.includes(ciudad)) {
+        historial.push(ciudad);
+        localStorage.setItem('historialConsultas', JSON.stringify(historial));
+    }
 }
 
-// 6. Función para actualizar el historial en el DOM desde localStorage
+// Función para actualizar el historial en el DOM desde localStorage
 function actualizarHistorialEnDOM() {
-    // Limpiar el historial actual
-    // Obtener el array de historial desde el LocalStorage
-    // Recorrer el historial y cargar en el dom
+    let historial = JSON.parse(localStorage.getItem('historialConsultas')) || [];
+    historyList.innerHTML = '';
+
+    historial.forEach(ciudad => {
+        const li = document.createElement('li');
+        li.textContent = ciudad;
+        historyList.appendChild(li);
+    });
 }
 
-// 7. Función para vaciar el historial de consultas en localStorage y en el DOM
+
+// Función para vaciar el historial de consultas en localStorage y en el DOM
 function vaciarHistorial() {
-    // Vaciar historial en localStorage
-    // Vaciar la lista de historial en el DOM
+    localStorage.removeItem('historialConsultas');
+    actualizarHistorialEnDOM();
 }
 
-// 8. Obtener la ciudad seleccionada desde los parámetros GET y obtener su información de clima al cargar la página
+// Obtener la ciudad seleccionada desde los parámetros GET y obtener su información de clima al cargar la página
 document.addEventListener('DOMContentLoaded', function() {
-    // obtener parámetros GET de la URL (ciudad seleccionada)
-    // obtener información de clima de una ciudad desde localStorage
-    // actualizar el historial en el DOM desde localStorage
+    const ciudadSeleccionada = localStorage.getItem('ciudadSeleccionada');
+    
+    if (ciudadSeleccionada) {
+        mostrarClimaEnTabla(ciudadSeleccionada);
+        agregarCiudadAHistorial(ciudadSeleccionada);
+        actualizarHistorialEnDOM();
+    } else {
+        alert('No se seleccionó ninguna ciudad. Redirigiendo...');
+        window.location.href = 'index.html';
+    }
 });
 
-// 9. Manejar evento de clic en el botón de vaciar historial para eliminar todas las consultas anteriores
+// Manejar evento de clic en el botón de vaciar historial para eliminar todas las consultas anteriores
+clearHistoryBtn.addEventListener('click', vaciarHistorial);
